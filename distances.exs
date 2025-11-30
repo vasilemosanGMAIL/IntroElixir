@@ -1,36 +1,21 @@
 defmodule Distance do
-  @moduledoc """
-  Provides functions for calculating distances between geometric points.
-  A point is represented as a tuple in the format {:point, x, y} where x and y are numbers.
-  """
 
-  @typedoc """
-  Represents a 2D point with x and y coordinates.
-  """
-  @type point :: {:point, number(), number()}
-
-  @doc """
-  Calculates the Euclidean distance between two points.
-
-  ## Parameters
-    * point1 - First point in format {:point, x1, y1}
-    * point2 - Second point in format {:point, x2, y2}
-
-  ## Returns
-    * float() - The distance between the two points
-  """
-  @spec distance(point(), point()) :: float()
-  def distance({:point, x1, y1}, {:point, x2, y2})
-      when is_number(x1) and is_number(y1) and is_number(x2) and is_number(y2) do
-    x_dist = x2 - x1
-    y_dist = y2 - y1
-    :math.sqrt(:math.pow(x_dist, 2) + :math.pow(y_dist, 2))
+  def distance({:point, x1, y1}, {:point, x2, y2}) do
+    x_dist = x1 - x2
+    y_dist = y1 - y2
+    :math.pow(x_dist, 2) + :math.pow(y_dist, 2) |> :math.sqrt()
   end
 
-  def distance(point1, point2) do
-    raise ArgumentError,
-          "Invalid point format. Expected {:point, number, number}, got: #{inspect(point1)} and #{inspect(point2)}"
+  def point_inside_figure?(point, {:circle, center, radius}) do
+    distance(point, center) <= radius
   end
+
+  def point_inside_figure?({:point, x, y}, {:rect, tl, br}) do
+    {:point, left_x, top_y} = tl
+    {:point, right_x, bottom_y} = br
+    x <= right_x and x >= left_x and y >= top_y and y <= bottom_y
+  end
+
 end
 
 ExUnit.start()
@@ -38,37 +23,50 @@ ExUnit.start()
 defmodule DistanceTest do
   use ExUnit.Case, async: true
 
-  describe "distance/2" do
+
     test "calculates distance between two points on the same axis" do
       assert Distance.distance({:point, 0, 0}, {:point, 0, 100}) == 100.0
       assert Distance.distance({:point, 0, 0}, {:point, 100, 0}) == 100.0
-    end
-
-    test "calculates distance for points forming a 3-4-5 triangle" do
       assert Distance.distance({:point, 0, 0}, {:point, 3, 4}) == 5.0
     end
 
-    test "calculates distance for points with negative coordinates" do
-      assert Distance.distance({:point, -1, -1}, {:point, 2, 3}) == 5.0
+    test "distance crashe" do
+      p = {:point, 10, 10}
+      r = {:rect, {:point, 0, 0}, {:point, 20, 20}}
+      assert_raise FunctionClauseError, fn -> Distance.distance(p, r) == 4.0 end
     end
 
-    test "calculates distance for decimal coordinates" do
-      result = Distance.distance({:point, 1.5, 2.5}, {:point, 4.5, 6.5})
-      assert_in_delta result, 5.0, 0.000001
+    test "distance inside circle" do
+      p1 = {:point, 10, 10}
+      p2 = {:point, 10, 100}
+      p3 = {:point, 0, 0}
+      p4 = {:point, 0, -16}
+      c = {:circle, {:point, 5, 5}, 20}
+      assert Distance.point_inside_figure?(p1, c)
+      refute Distance.point_inside_figure?(p2, c)
+      assert Distance.point_inside_figure?(p3, c)
+      refute Distance.point_inside_figure?(p4, c)
     end
 
-    test "returns 0.0 for same point" do
-      assert Distance.distance({:point, 1, 1}, {:point, 1, 1}) == 0.0
+    test "point inside rectangle" do
+      p1 = {:point, 10, 10}
+      p2 = {:point, 10, 100}
+      p3 = {:point, 0, 0}
+      p4 = {:point, 0, -16}
+      r = {:rect, {:point, 0, 0}, {:point, 20, 20}}
+      assert Distance.point_inside_figure?(p1, r)
+      refute Distance.point_inside_figure?(p2, r)
+      assert Distance.point_inside_figure?(p3, r)
+      refute Distance.point_inside_figure?(p4, r)
     end
 
-    test "raises ArgumentError for invalid point format" do
-      assert_raise ArgumentError, fn ->
-        Distance.distance({:invalid, 0, 0}, {:point, 1, 1})
-      end
+    test "point inside figure crash" do
 
-      assert_raise ArgumentError, fn ->
-        Distance.distance({:point, "0", 0}, {:point, 1, 1})
-      end
+      p0 = {:point, 100, 100}
+      p1 = {:point, 10, 10}
+      p2 = {:point, 10, 100}
+      p3 = {:point, 0, 0}
+      triangle = {:triangle, p1, p2, p3}
+      assert_raise FunctionClauseError, fn -> Distance.point_inside_figure?(p0, triangle) end
     end
   end
-end

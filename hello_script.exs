@@ -21,7 +21,10 @@ defmodule HelloScript do
       "Sum is 10 or less"
     end
     IO.puts(result)
-
+    # String graphemes and character frequencies
+    IO.puts("\n--- String Graphemes & Frequencies ---")
+    frequencies = "Elixir" |> String.graphemes() |> Enum.frequencies()
+    IO.inspect(frequencies, label: "Character frequencies in 'Elixir'")
     # Working with dates
     current_time = Time.utc_now()
     IO.puts("Current time: #{current_time.hour}:#{current_time.minute}:#{current_time.second}")
