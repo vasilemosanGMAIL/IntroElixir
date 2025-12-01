@@ -11,6 +11,14 @@ defmodule Example.MixProject do
     ]
   end
 
+  def cli do
+    [
+      preferred_envs: [
+        "hex.publish": :dev
+      ]
+    ]
+  end
+
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
