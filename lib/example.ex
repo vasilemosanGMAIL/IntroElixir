@@ -16,10 +16,10 @@ defmodule Example do
   """
   defstruct name: "", age: 0, occupation: nil
 
-  @doc """
-  Product struct definition with enforced keys.
-  """
   defmodule Product do
+    @moduledoc """
+    Product struct definition with enforced keys.
+    """
     @enforce_keys [:sku]
     defstruct [:sku, :name, price: 0.0, in_stock: true]
   end
