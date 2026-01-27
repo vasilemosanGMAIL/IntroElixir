@@ -151,6 +151,80 @@ defmodule RecursionExamples do
     processed_value = String.upcase(to_string(value))
     [{key, processed_value} | process_keyword_list(rest)]
   end
+
+  # Sample user data in format {:user, id, name, age}
+  def test_data do
+    [
+      {:user, 1, "Bob", 23},
+      {:user, 2, "Alice", 30},
+      {:user, 3, "Eve", 15},
+      {:user, 4, "Mallory", 10},
+      {:user, 5, "Trent", 46}
+    ]
+  end
+
+  # Entry point: initializes empty accumulators for the recursive helper function
+  # This pattern separates the public API from the internal recursion with accumulators
+  def split_adults_and_minors(users) do
+    split_adults_and_minors(users, [], [])
+  end
+
+  # Base case: when list is empty, reverse both accumulator lists
+  defp split_adults_and_minors([], adults, minors) do
+    {Enum.reverse(adults), Enum.reverse(minors)}
+  end
+
+  # Recursive case: process one user at a time
+  defp split_adults_and_minors([user | users], adults, minors) do
+    # Extract age from user tuple
+    {:user, _id, _name, age} = user
+
+    if age >= 16 do
+      # Add to adults list and continue with remaining users
+      split_adults_and_minors(users, [user | adults], minors)
+    else
+      # Add to minors list and continue with remaining users
+      split_adults_and_minors(users, adults, [user | minors])
+    end
+  end
+
+  # split_adults_and_minors([{:user, 1, "Bob", 23}, {:user, 3, "Eve", 15}], [], [])
+  # │
+  # ├─ Pattern matches [user | users] where:
+  # │  ├─ user = {:user, 1, "Bob", 23}
+  # │  ├─ users = [{:user, 3, "Eve", 15}]
+  # │  ├─ adults = []
+  # │  └─ minors = []
+  # │
+  # ├─ Extract age: {:user, _id, _name, age} = {:user, 1, "Bob", 23}
+  # │  └─ age = 23
+  # │
+  # ├─ Check: 23 >= 16? Yes!
+  # │  └─ Add Bob to adults list
+  # │
+  # └─ Recurse: split_adults_and_minors([{:user, 3, "Eve", 15}], [{:user, 1, "Bob", 23}], [])
+  #            │
+  #            ├─ Pattern matches [user | users] where:
+  #            │  ├─ user = {:user, 3, "Eve", 15}
+  #            │  ├─ users = []
+  #            │  ├─ adults = [{:user, 1, "Bob", 23}]
+  #            │  └─ minors = []
+  #            │
+  #            ├─ Extract age: {:user, _id, _name, age} = {:user, 3, "Eve", 15}
+  #            │  └─ age = 15
+  #            │
+  #            ├─ Check: 15 >= 16? No!
+  #            │  └─ Add Eve to minors list
+  #            │
+  #            └─ Recurse: split_adults_and_minors([], [{:user, 1, "Bob", 23}], [{:user, 3, "Eve", 15}])
+  #                       │
+  #                       ├─ Pattern matches [] (empty list) - BASE CASE!
+  #                       │
+  #                       └─ Return: {Enum.reverse([{:user, 1, "Bob", 23}]), Enum.reverse([{:user, 3, "Eve", 15}])}
+  #                                 │
+  #                                 └─ Final result: {[{:user, 1, "Bob", 23}], [{:user, 3, "Eve", 15}]}
+  #                                                   │                        │
+  #                                                   └─ Adults                └─ Minors
 end
 
 # ============================================================================
@@ -213,6 +287,14 @@ keywords = [name: "john", city: "paris", country: "france"]
 processed = RecursionExamples.process_keyword_list(keywords)
 IO.puts("Original: #{inspect(keywords)}")
 IO.puts("Processed: #{inspect(processed)}")
+
+IO.puts("\n=== USER DATA PROCESSING ===")
+users = RecursionExamples.test_data()
+IO.puts("All users: #{inspect(users)}")
+
+{adults, minors} = RecursionExamples.split_adults_and_minors(users)
+IO.puts("Adults (age >= 16): #{inspect(adults)}")
+IO.puts("Minors (age < 16): #{inspect(minors)}")
 
 # ============================================================================
 # COMPARISON WITH IMPERATIVE LOOPS
