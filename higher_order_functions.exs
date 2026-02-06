@@ -118,4 +118,24 @@ defmodule HigherOrderFunctions do
   end
 
   defp invertor(predicat), do: fn arg1, arg2 -> not predicat.(arg1, arg2) end
+
+  # Higher-order function with filter + map:
+  def adult_names_hof(users, min_age) do
+    users
+    |> Enum.filter(fn {:user, _, _, age} -> age >= min_age end)
+    |> Enum.map(fn {:user, _, name, _} -> name end)
+  end
+
+  # List comprehension with guard (filter + transform in one):
+  # for
+  # generator
+  # filter
+  # into: destination
+  # do: result_item
+  #
+  # generator: pattern <- list
+  # filter: predicate (guard)
+  def adult_names_comp(users, min_age) do
+    for {:user, _, name, age} <- users, age >= min_age, do: name
+  end
 end
